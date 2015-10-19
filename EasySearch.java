@@ -34,9 +34,26 @@ public class EasySearch {
     }
 
 
-    public void search(String queryString) {
+    public double calculateRelevanceScore(String queryString) {
 
         Set<Term> queryTerms = getQueryTerms(queryString);
+        for (Term queryTerm : queryTerms) {
+            int documentFreq = getDocumentFrequency(queryTerm);
+            System.out.println(documentFreq);
+        }
+
+
+        return 0.0;
+    }
+
+    private int getDocumentFrequency(Term queryTerm) {
+        int freq = 0;
+        try {
+            freq = reader.docFreq(queryTerm);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return freq;
     }
 
     private Set<Term> getQueryTerms(String queryString) {
