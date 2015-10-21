@@ -5,16 +5,19 @@ import org.apache.lucene.analysis.Analyzer;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.IndexReader;
+import org.apache.lucene.index.LeafReaderContext;
 import org.apache.lucene.index.Term;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
+import org.apache.lucene.search.similarities.DefaultSimilarity;
 import org.apache.lucene.store.FSDirectory;
 
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 
 public class EasySearch {
@@ -42,8 +45,37 @@ public class EasySearch {
             System.out.println(documentFreq);
         }
 
+        int normalizedDocumentLength = getNormalizedDocumentLength();
+
 
         return 0.0;
+    }
+
+    private int getNormalizedDocumentLength() {
+        DefaultSimilarity defaultSimilarity = new DefaultSimilarity();
+        List<LeafReaderContext> leafReaderContexts = reader.getContext().leaves();
+
+        for (LeafReaderContext leafReaderContext : leafReaderContexts) {
+            int startDocNo = leafReaderContext.docBase;
+            int numberOfDoc = leafReaderContext.reader().maxDoc();
+            for (int docId = 0; docId < numberOfDoc; docId++) {
+
+                float normDocLeng = 0;
+                try {
+                    normDocLeng = defaultSimilarity.decodeNormValue(leafReaderContext.reader().getNormValues("TEXT").get(docId));
+                    // Get length of the document
+                    float docLeng = 1 / (normDocLeng * normDocLeng);
+                    System.out.println("Length of doc(" + (docId +
+                            startDocNo)
+                            + ", " + searcher.doc(docId +
+                            startDocNo).get("DOCNO")
+                            + ") is " + docLeng);
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+        return 0;
     }
 
     private int getDocumentFrequency(Term queryTerm) {
