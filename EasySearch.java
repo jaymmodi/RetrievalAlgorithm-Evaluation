@@ -23,6 +23,7 @@ public class EasySearch {
     public Analyzer analyzer;
     public Map<String, Double> documentLengthMap;
     public Map<String, Integer> termFreqPerDocMap;
+    public PriorityQueue<QueryScore> top1000Queue;
 
     List<LeafReaderContext> leafReaderContexts;
 
@@ -31,30 +32,27 @@ public class EasySearch {
             this.reader = DirectoryReader.open(FSDirectory.open(Paths.get(path)));
             this.searcher = new IndexSearcher(reader);
             this.analyzer = new StandardAnalyzer();
-            documentLengthMap = new HashMap<String, Double>();
-            termFreqPerDocMap = new HashMap<String, Integer>();
-            leafReaderContexts = reader.getContext().leaves();
+            this.documentLengthMap = new HashMap<String, Double>();
+            this.termFreqPerDocMap = new HashMap<String, Integer>();
+            this.leafReaderContexts = reader.getContext().leaves();
+            this.top1000Queue = new PriorityQueue<QueryScore>(1000, new QueryScore());
+
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
 
 
-    public double calculateRelevanceScore(String queryString) {
+    public PriorityQueue<QueryScore> calculateRelevanceScore(String queryString) {
         int totalNumberOfDocs = reader.maxDoc();
         System.out.println("totalNumberOfDocs = " + totalNumberOfDocs);
         calculateLengthForAllDocs();
 
-
-        Set<Term> queryTerms = getQueryTerms(queryString);
-        for (Term queryTerm : queryTerms) {
-            calculateTermFreqForAllDocs(queryTerm.text());
-        }
+        Set<Term> queryTerms = createFrequencyMapForAllTerms(queryString);
 
         for (LeafReaderContext leafReaderContext : leafReaderContexts) {
             int startDoc = leafReaderContext.docBase;
             int numberDocs = leafReaderContext.reader().maxDoc();
-
 
             for (int docId = 0; docId < numberDocs; docId++) {
                 try {
@@ -71,7 +69,9 @@ public class EasySearch {
                         int documentFrequency = getDocumentFrequency(term);
                         tfIDF += calculateTFIDF(totalNumberOfDocs, termFrequencyPerDocument, lengthOfDocument, documentFrequency);
                     }
-                    System.out.println("Relevance Score for  " + queryString + " in" + docNo + " is" + tfIDF);
+//                    System.out.println("Relevance Score for  " + queryString + " in" + docNo + " is " + tfIDF);
+                    QueryScore queryScore = storeInQueryStoreObject(queryString, docNo, tfIDF);
+                    addInPriorityQueue(queryScore);
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -80,19 +80,38 @@ public class EasySearch {
         }
 
 
-        return 0.0;
+        return top1000Queue;
+    }
+
+    private void addInPriorityQueue(QueryScore queryScore) {
+        top1000Queue.add(queryScore);
+    }
+
+    private QueryScore storeInQueryStoreObject(String queryString, String docNo, double tfIDF) {
+        QueryScore queryScore = new QueryScore();
+        queryScore.setQuery(queryString);
+        queryScore.setDocNo(docNo);
+        queryScore.setScore(tfIDF);
+        return queryScore;
+    }
+
+    private Set<Term> createFrequencyMapForAllTerms(String queryString) {
+        Set<Term> queryTerms = getQueryTerms(queryString);
+        for (Term queryTerm : queryTerms) {
+            calculateTermFreqForAllDocs(queryTerm.text());
+        }
+        return queryTerms;
     }
 
     private void calculateTermFreqForAllDocs(String term) {
         System.out.println("Making term frequency map for " + term);
         for (LeafReaderContext leafReaderContext : leafReaderContexts) {
             try {
-//                int startDoc = leafReaderContext.docBase;
                 PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(leafReaderContext.reader(), "TEXT", new BytesRef(term));
                 int doc;
                 if (postingsEnum != null) {
                     while ((doc = postingsEnum.nextDoc()) != PostingsEnum.NO_MORE_DOCS) {
-                        System.out.println(postingsEnum.docID());
+//                        System.out.println(postingsEnum.docID());
                         String docNo = searcher.doc(postingsEnum.docID()).get("DOCNO");
                         termFreqPerDocMap.put(docNo + term, postingsEnum.freq());
                     }
@@ -109,13 +128,11 @@ public class EasySearch {
     private void calculateLengthForAllDocs() {
         DefaultSimilarity defaultSimilarity = new DefaultSimilarity();
 
-
         for (LeafReaderContext leafReaderContext : leafReaderContexts) {
             int startDoc = leafReaderContext.docBase;
             int numberOfDocs = leafReaderContext.reader().maxDoc();
 
             double normDocLength;
-
             for (int docId = 0; docId < numberOfDocs; docId++) {
                 try {
                     normDocLength = defaultSimilarity.decodeNormValue(leafReaderContext.reader().getNormValues("TEXT").get(docId));
@@ -124,7 +141,6 @@ public class EasySearch {
 
                     String docNo = searcher.doc(docId + startDoc).get("DOCNO");
                     documentLengthMap.put(docNo, docLength);
-
                 } catch (IOException e) {
                     e.printStackTrace();
                 }

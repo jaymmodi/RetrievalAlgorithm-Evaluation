@@ -1,6 +1,8 @@
 package Assignment2;
 
 
+import java.util.PriorityQueue;
+
 public class MainClass {
 
     public static void main(String[] args) {
@@ -9,6 +11,9 @@ public class MainClass {
 
         EasySearch easySearch = new EasySearch(indexPath);
 
-        easySearch.calculateRelevanceScore(queryString);
+        PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore(queryString);
+
+        SearchTRECTopics searchTRECTopics = new SearchTRECTopics();
+        searchTRECTopics.printTop1000Docs(queryScores);
     }
 }
