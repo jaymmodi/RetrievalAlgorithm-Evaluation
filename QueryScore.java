@@ -7,6 +7,15 @@ public class QueryScore implements Comparator<QueryScore> {
     String query;
     String docNo;
     double score;
+    int id;
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
+    }
 
     public String getQuery() {
         return query;
