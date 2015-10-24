@@ -108,10 +108,11 @@ public class EasySearch {
         for (LeafReaderContext leafReaderContext : leafReaderContexts) {
             try {
                 PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(leafReaderContext.reader(), "TEXT", new BytesRef(term));
+                int startDoc = leafReaderContext.docBase;
                 int doc;
                 if (postingsEnum != null) {
                     while ((doc = postingsEnum.nextDoc()) != PostingsEnum.NO_MORE_DOCS) {
-                        String docNo = searcher.doc(postingsEnum.docID()).get("DOCNO");
+                        String docNo = searcher.doc(postingsEnum.docID() + startDoc).get("DOCNO");
                         termFreqPerDocMap.put(docNo + term, postingsEnum.freq());
                     }
                 }

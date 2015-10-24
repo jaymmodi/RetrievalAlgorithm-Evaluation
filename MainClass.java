@@ -26,7 +26,9 @@ public class MainClass {
             easySearch.calculateLengthForAllDocs();
             createTitlesFile(easySearch, titles);
             createDescriptionFile(easySearch, description);
-
+//            PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore("New York", 1);
+//            SearchTRECTopics searchTRECTopics = new SearchTRECTopics("newyork.txt");
+//            searchTRECTopics.printTop1000Docs(queryScores);
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -38,8 +40,8 @@ public class MainClass {
         System.out.println("Creating Description File");
         SearchTRECTopics searchTRECTopics = new SearchTRECTopics("description.txt");
         int id = 51;
-        for (int i = 0; i < description.length; i++) {
-            PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore(description[i].trim(), id);
+        for (String aDescription : description) {
+            PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore(aDescription.trim(), id);
             searchTRECTopics.printTop1000Docs(queryScores);
             ++id;
         }
@@ -50,8 +52,8 @@ public class MainClass {
         System.out.println("Creating Titles File");
         SearchTRECTopics searchTRECTopics = new SearchTRECTopics("titles.txt");
         int id = 51;
-        for (int i = 0; i < titles.length; i++) {
-            PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore(titles[i].trim(), id);
+        for (String title : titles) {
+            PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore(title.trim(), id);
             searchTRECTopics.printTop1000Docs(queryScores);
             ++id;
         }
