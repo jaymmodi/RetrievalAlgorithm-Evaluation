@@ -45,8 +45,8 @@ public class EasySearch {
 
     public PriorityQueue<QueryScore> calculateRelevanceScore(String queryString, int id) {
         int totalNumberOfDocs = reader.maxDoc();
-        System.out.println("");
         termFreqPerDocMap.clear();
+        top1000Queue.clear();
         Set<Term> queryTerms = createFrequencyMapForAllTerms(queryString);
 
         for (LeafReaderContext leafReaderContext : leafReaderContexts) {
@@ -70,6 +70,7 @@ public class EasySearch {
                             tfIDF += calculateTFIDF(totalNumberOfDocs, termFrequencyPerDocument, lengthOfDocument, documentFrequency);
                         }
                     }
+
                     QueryScore queryScore = storeInQueryStoreObject(queryString, docNo, tfIDF, id);
                     addInPriorityQueue(queryScore);
 
@@ -104,7 +105,6 @@ public class EasySearch {
     }
 
     private void calculateTermFreqForAllDocs(String term) {
-        System.out.println("Making term frequency map for ' " + term + " '");
         for (LeafReaderContext leafReaderContext : leafReaderContexts) {
             try {
                 PostingsEnum postingsEnum = MultiFields.getTermDocsEnum(leafReaderContext.reader(), "TEXT", new BytesRef(term));
@@ -126,7 +126,7 @@ public class EasySearch {
     }
 
     public void calculateLengthForAllDocs() {
-        System.out.println("Storing length of all documents in map");
+//        System.out.println("Storing length of all documents in map");
         DefaultSimilarity defaultSimilarity = new DefaultSimilarity();
 
         for (LeafReaderContext leafReaderContext : leafReaderContexts) {
@@ -151,7 +151,7 @@ public class EasySearch {
     }
 
     public double calculateTFIDF(int totalNumberOfDocuments, int countOfTermPerDocument, double documentLength, int termFrequency) {
-        return ((double) countOfTermPerDocument / documentLength) * Math.log10(1 + totalNumberOfDocuments / termFrequency);
+        return ((double) countOfTermPerDocument / documentLength) * Math.log10(1 + (double) totalNumberOfDocuments / termFrequency);
     }
 
 
@@ -169,13 +169,8 @@ public class EasySearch {
         QueryParser parser = new QueryParser("TEXT", analyzer);
         Set<Term> queryTerms = new LinkedHashSet<Term>();
         try {
-            Query query = parser.parse(QueryParser.escape(queryString)); //QueryParser.escape(parsedReview)
+            Query query = parser.parse(QueryParser.escape(queryString));
             searcher.createNormalizedWeight(query, false).extractTerms(queryTerms);
-            System.out.println("Terms in query are ");
-            for (Term queryTerm : queryTerms) {
-                System.out.println("queryTerm.text() = " + queryTerm.text());
-            }
-
         } catch (ParseException e) {
             e.printStackTrace();
         } catch (IOException e) {
