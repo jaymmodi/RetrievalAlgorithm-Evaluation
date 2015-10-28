@@ -2,6 +2,7 @@ package Assignment2;
 
 
 import org.apache.commons.lang3.StringUtils;
+import org.apache.lucene.search.similarities.BM25Similarity;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -14,26 +15,39 @@ public class MainClass {
 
         byte[] fileArray;
         String fullFileString;
-        String indexPath = "index";
+        String indexPath = "D:\\Jay\\IUB\\Fall_2015\\Search\\Programming Assignment\\Assignment -2\\index";
         EasySearch easySearch = new EasySearch(indexPath);
         try {
-            fileArray = Files.readAllBytes(Paths.get("topics.51-100"));
+            fileArray = Files.readAllBytes(Paths.get("D:\\Jay\\IUB\\Fall_2015\\Search\\Programming Assignment\\Assignment -2\\topics.51-100"));
             fullFileString = new String(fileArray);
 
             String titles[] = getAllTitles(fullFileString);
             String description[] = getAllDescription(fullFileString);
 
-            easySearch.calculateLengthForAllDocs();
-            createTitlesFile(easySearch, titles);
-            createDescriptionFile(easySearch, description);
+//            easySearch.calculateLengthForAllDocs();
+//            createTitlesFile(easySearch, titles);
+//            createDescriptionFile(easySearch, description);
 //            PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore("New York", 1);
 //            SearchTRECTopics searchTRECTopics = new SearchTRECTopics("newyork.txt");
 //            searchTRECTopics.printTop1000Docs(queryScores);
+
+            compareAlgorithms(indexPath, titles, "shortQuery.txt");
+//            compareAlgorithms(indexPath, description, "longQuery.txt");
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+    }
+
+    private static void compareAlgorithms(String indexPath, String[] queries, String fileSuffix) {
+        CompareAlgorithms compareAlgorithms = new CompareAlgorithms(indexPath, new BM25Similarity(), "BM25" + fileSuffix);
+        int count = 1;
+        for (String query : queries) {
+            compareAlgorithms.calculateForGivenAlgorithms(query, count);
+            ++count;
+        }
+        compareAlgorithms.closeResources();
     }
 
     private static void createDescriptionFile(EasySearch easySearch, String[] description) {

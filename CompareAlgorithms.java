@@ -12,44 +12,62 @@ import org.apache.lucene.search.IndexSearcher;
 import org.apache.lucene.search.Query;
 import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
-import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.similarities.Similarity;
 import org.apache.lucene.store.FSDirectory;
 
+import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Paths;
 
 public class CompareAlgorithms {
 
+    IndexReader indexReader;
+    IndexSearcher indexSearcher;
+    Analyzer analyzer;
+    String fileName;
+    FileWriter fileWriter;
 
-    public static void main(String[] args) {
-        String queryString = "Airbus Subsidies";
-
-        String indexPath = "D:\\Jay\\IUB\\Fall_2015\\Search\\Programming Assignment\\Assignment -2\\index";
-
+    public CompareAlgorithms(String indexPath, Similarity similarity, String fileName) {
         try {
-            IndexReader reader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
-            IndexSearcher searcher = new IndexSearcher(reader);
-            Analyzer analyzer = new StandardAnalyzer();
-            searcher.setSimilarity(new BM25Similarity());
+            this.indexReader = DirectoryReader.open(FSDirectory.open(Paths.get(indexPath)));
+            this.indexSearcher = new IndexSearcher(indexReader);
+            this.analyzer = new StandardAnalyzer();
+            this.indexSearcher.setSimilarity(similarity);
+            this.fileName = fileName;
+            this.fileWriter = new FileWriter(fileName);
 
-
-            QueryParser parser = new QueryParser("TEXT", analyzer);
-            Query query = parser.parse(QueryParser.escape(queryString));
-            System.out.println("Searching for : " + query.toString("TEXT"));
-
-            TopDocs results = searcher.search(query, 1000);
-
-            int numTotalHits = results.totalHits;
-            System.out.println(numTotalHits + "total matching documents");
-
-            ScoreDoc[] hits = results.scoreDocs;
-            for (int i = 0; i < hits.length; i++) {
-                Document doc = searcher.doc(hits[i].doc);
-                System.out.println(doc.get("DOCNO"));
-            }
         } catch (IOException e) {
             e.printStackTrace();
-        } catch (ParseException e) {
+        }
+    }
+
+    public void calculateForGivenAlgorithms(String queryString, int count) {
+        QueryParser parser = new QueryParser("TEXT", analyzer);
+        try {
+            Query query = parser.parse(QueryParser.escape(queryString));
+            TopDocs results = indexSearcher.search(query, 1000);
+
+            ScoreDoc[] hits = results.scoreDocs;
+            printToFile(hits, count);
+        } catch (ParseException | IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    private void printToFile(ScoreDoc[] hits, int count) throws IOException {
+        StringBuilder strToPrint = new StringBuilder();
+        for (int i = 0; i < hits.length; i++) {
+            Document doc = indexSearcher.doc(hits[i].doc);
+            strToPrint = strToPrint.append(String.valueOf(count)).append("\t\t").append("Q0").append("\t").append(doc.get("DOCNO")).append("\t").append(String.valueOf(i + 1)).append("\t\t").append("\t\t").append("run-1\n");
+        }
+        fileWriter.write(strToPrint.toString());
+    }
+
+    public void closeResources() {
+        try {
+            this.fileWriter.close();
+        } catch (IOException e) {
             e.printStackTrace();
         }
 
