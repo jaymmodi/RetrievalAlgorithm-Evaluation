@@ -24,6 +24,7 @@ public class EasySearch {
     public Map<String, Double> documentLengthMap;
     public Map<String, Integer> termFreqPerDocMap;
     public PriorityQueue<QueryScore> top1000Queue;
+    public DefaultSimilarity defaultSimilarity;
 
     List<LeafReaderContext> leafReaderContexts;
 
@@ -32,10 +33,11 @@ public class EasySearch {
             this.reader = DirectoryReader.open(FSDirectory.open(Paths.get(path)));
             this.searcher = new IndexSearcher(reader);
             this.analyzer = new StandardAnalyzer();
-            this.documentLengthMap = new HashMap<String, Double>();
-            this.termFreqPerDocMap = new HashMap<String, Integer>();
+            this.documentLengthMap = new HashMap<>();
+            this.termFreqPerDocMap = new HashMap<>();
             this.leafReaderContexts = reader.getContext().leaves();
-            this.top1000Queue = new PriorityQueue<QueryScore>(1000, new QueryScore());
+            this.top1000Queue = new PriorityQueue<>(1000, new QueryScore());
+            this.defaultSimilarity = new DefaultSimilarity();
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -49,7 +51,7 @@ public class EasySearch {
         top1000Queue.clear();
         Set<Term> queryTerms = createFrequencyMapForAllTerms(queryString);
 
-        for (LeafReaderContext leafReaderContext : leafReaderContexts) {
+        for (LeafReaderContext leafReaderContext : leafReaderContexts) { // 2 min 46 seconds
             int startDoc = leafReaderContext.docBase;
             int numberDocs = leafReaderContext.reader().maxDoc();
 
@@ -70,9 +72,10 @@ public class EasySearch {
                             tfIDF += calculateTFIDF(totalNumberOfDocs, termFrequencyPerDocument, lengthOfDocument, documentFrequency);
                         }
                     }
-
-                    QueryScore queryScore = storeInQueryStoreObject(queryString, docNo, tfIDF, id);
-                    addInPriorityQueue(queryScore);
+                    if (tfIDF != 0.0) {
+                        QueryScore queryScore = storeInQueryStoreObject(queryString, docNo, tfIDF, id);
+                        addInPriorityQueue(queryScore);
+                    }
 
                 } catch (IOException e) {
                     e.printStackTrace();
@@ -84,7 +87,14 @@ public class EasySearch {
     }
 
     private void addInPriorityQueue(QueryScore queryScore) {
-        top1000Queue.add(queryScore);
+        if (top1000Queue.size() < 1000) {
+            top1000Queue.add(queryScore);
+        } else {
+            if (top1000Queue.peek().getScore() < queryScore.getScore()) {
+                top1000Queue.remove();
+                top1000Queue.add(queryScore);
+            }
+        }
     }
 
     private QueryScore storeInQueryStoreObject(String queryString, String docNo, double tfIDF, int id) {
@@ -116,9 +126,7 @@ public class EasySearch {
                         termFreqPerDocMap.put(docNo + term, postingsEnum.freq());
                     }
                 }
-            } catch (IOException e) {
-                e.printStackTrace();
-            } catch (IllegalArgumentException e) {
+            } catch (IOException | IllegalArgumentException e) {
                 e.printStackTrace();
             }
 
@@ -126,7 +134,6 @@ public class EasySearch {
     }
 
     public void calculateLengthForAllDocs() {
-//        System.out.println("Storing length of all documents in map");
         DefaultSimilarity defaultSimilarity = new DefaultSimilarity();
 
         for (LeafReaderContext leafReaderContext : leafReaderContexts) {
@@ -171,9 +178,7 @@ public class EasySearch {
         try {
             Query query = parser.parse(QueryParser.escape(queryString));
             searcher.createNormalizedWeight(query, false).extractTerms(queryTerms);
-        } catch (ParseException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+        } catch (ParseException | IOException e) {
             e.printStackTrace();
         }
         return queryTerms;

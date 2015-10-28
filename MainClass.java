@@ -14,10 +14,10 @@ public class MainClass {
 
         byte[] fileArray;
         String fullFileString;
-        String indexPath = "D:\\Jay\\IUB\\Fall_2015\\Search\\Programming Assignment\\Assignment -2\\index";
+        String indexPath = "index";
         EasySearch easySearch = new EasySearch(indexPath);
         try {
-            fileArray = Files.readAllBytes(Paths.get("D:\\Jay\\IUB\\Fall_2015\\Search\\Programming Assignment\\Assignment -2\\topics.51-100"));
+            fileArray = Files.readAllBytes(Paths.get("topics.51-100"));
             fullFileString = new String(fileArray);
 
             String titles[] = getAllTitles(fullFileString);
@@ -41,6 +41,7 @@ public class MainClass {
         SearchTRECTopics searchTRECTopics = new SearchTRECTopics("description.txt");
         int id = 51;
         for (String aDescription : description) {
+            System.out.println(id);
             PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore(aDescription.trim(), id);
             searchTRECTopics.printTop1000Docs(queryScores);
             ++id;
@@ -53,6 +54,7 @@ public class MainClass {
         SearchTRECTopics searchTRECTopics = new SearchTRECTopics("titles.txt");
         int id = 51;
         for (String title : titles) {
+            System.out.println(id);
             PriorityQueue<QueryScore> queryScores = easySearch.calculateRelevanceScore(title.trim(), id);
             searchTRECTopics.printTop1000Docs(queryScores);
             ++id;

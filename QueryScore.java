@@ -42,10 +42,10 @@ public class QueryScore implements Comparator<QueryScore> {
     }
 
     public int compare(QueryScore o1, QueryScore o2) {
-        if (o1.getScore() < o2.getScore()) {
+        if (o1.getScore() > o2.getScore()) {
             return 1;
         }
-        if (o1.getScore() > o2.getScore()) {
+        if (o1.getScore() < o2.getScore()) {
             return -1;
         }
         return 0;
