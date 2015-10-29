@@ -1,4 +1,4 @@
-package Assignment2;
+package Assignment2.Task1AndTask2;
 
 
 import java.io.File;
@@ -17,21 +17,10 @@ public class SearchTRECTopics {
         try {
             this.file = new File(s);
             this.fileWriter = new FileWriter(file, true);
-            writeFirstLine(s);
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-
-    private void writeFirstLine(String s) {
-        try {
-            fileWriter.write("QueryID\tQ0\tDocID\t\t\tRank\t\tScore\t\t\t\tRunID\n");
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
 
     public void printTop1000Docs(PriorityQueue<QueryScore> queue) {
         int rank = 1;

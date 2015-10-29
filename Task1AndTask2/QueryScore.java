@@ -1,4 +1,4 @@
-package Assignment2;
+package Assignment2.Task1AndTask2;
 
 import java.util.Comparator;
 

@@ -1,4 +1,4 @@
-package Assignment2;
+package Assignment2.Task1AndTask2;
 
 
 import org.apache.lucene.analysis.Analyzer;
@@ -51,7 +51,7 @@ public class EasySearch {
         top1000Queue.clear();
         Set<Term> queryTerms = createFrequencyMapForAllTerms(queryString);
 
-        for (LeafReaderContext leafReaderContext : leafReaderContexts) { // 2 min 46 seconds
+        for (LeafReaderContext leafReaderContext : leafReaderContexts) {
             int startDoc = leafReaderContext.docBase;
             int numberDocs = leafReaderContext.reader().maxDoc();
 

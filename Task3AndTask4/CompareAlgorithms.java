@@ -1,4 +1,4 @@
-package Assignment2;
+package Assignment2.Task3AndTask4;
 
 
 import org.apache.lucene.analysis.Analyzer;
