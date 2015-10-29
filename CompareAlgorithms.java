@@ -59,7 +59,7 @@ public class CompareAlgorithms {
         StringBuilder strToPrint = new StringBuilder();
         for (int i = 0; i < hits.length; i++) {
             Document doc = indexSearcher.doc(hits[i].doc);
-            strToPrint = strToPrint.append(String.valueOf(count)).append("\t\t").append("Q0").append("\t").append(doc.get("DOCNO")).append("\t").append(String.valueOf(i + 1)).append("\t\t").append("\t\t").append("run-1\n");
+            strToPrint = strToPrint.append(String.valueOf(count)).append(" ").append("0").append(" ").append(doc.get("DOCNO")).append(" ").append(String.valueOf(i + 1)).append(" ").append(String.valueOf(hits[i].score)).append(" ").append(fileName).append("\n");
         }
         fileWriter.write(strToPrint.toString());
     }

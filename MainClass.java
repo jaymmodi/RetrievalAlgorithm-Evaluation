@@ -3,6 +3,9 @@ package Assignment2;
 
 import org.apache.commons.lang3.StringUtils;
 import org.apache.lucene.search.similarities.BM25Similarity;
+import org.apache.lucene.search.similarities.DefaultSimilarity;
+import org.apache.lucene.search.similarities.LMDirichletSimilarity;
+import org.apache.lucene.search.similarities.LMJelinekMercerSimilarity;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -15,10 +18,10 @@ public class MainClass {
 
         byte[] fileArray;
         String fullFileString;
-        String indexPath = "D:\\Jay\\IUB\\Fall_2015\\Search\\Programming Assignment\\Assignment -2\\index";
+        String indexPath = "/media/jay/New Volume/Jay/IUB/Fall_2015/Search/Programming Assignment/Assignment -2/index";
         EasySearch easySearch = new EasySearch(indexPath);
         try {
-            fileArray = Files.readAllBytes(Paths.get("D:\\Jay\\IUB\\Fall_2015\\Search\\Programming Assignment\\Assignment -2\\topics.51-100"));
+            fileArray = Files.readAllBytes(Paths.get("/media/jay/New Volume/Jay/IUB/Fall_2015/Search/Programming Assignment/Assignment -2/topics.51-100"));
             fullFileString = new String(fileArray);
 
             String titles[] = getAllTitles(fullFileString);
@@ -32,7 +35,7 @@ public class MainClass {
 //            searchTRECTopics.printTop1000Docs(queryScores);
 
             compareAlgorithms(indexPath, titles, "shortQuery.txt");
-//            compareAlgorithms(indexPath, description, "longQuery.txt");
+            compareAlgorithms(indexPath, description, "longQuery.txt");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -42,7 +45,20 @@ public class MainClass {
 
     private static void compareAlgorithms(String indexPath, String[] queries, String fileSuffix) {
         CompareAlgorithms compareAlgorithms = new CompareAlgorithms(indexPath, new BM25Similarity(), "BM25" + fileSuffix);
-        int count = 1;
+        calculateForAllQueries(queries, compareAlgorithms);
+
+        compareAlgorithms = new CompareAlgorithms(indexPath, new DefaultSimilarity(), "DefaultSimilarity" + fileSuffix);
+        calculateForAllQueries(queries, compareAlgorithms);
+
+        compareAlgorithms = new CompareAlgorithms(indexPath, new LMDirichletSimilarity(), "LMDirichletSimilarity" + fileSuffix);
+        calculateForAllQueries(queries, compareAlgorithms);
+
+        compareAlgorithms = new CompareAlgorithms(indexPath, new LMJelinekMercerSimilarity((float) 0.7), "LMJelinekMercerSimilarity" + fileSuffix);
+        calculateForAllQueries(queries, compareAlgorithms);
+    }
+
+    private static void calculateForAllQueries(String[] queries, CompareAlgorithms compareAlgorithms) {
+        int count = 51;
         for (String query : queries) {
             compareAlgorithms.calculateForGivenAlgorithms(query, count);
             ++count;
